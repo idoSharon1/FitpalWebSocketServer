@@ -19,7 +19,10 @@ io.on("connection", (socket) => {
 
     console.log("socket is active and connected")
 
-
+    socket.on("joinChat", (chatId) => {
+        console.log(`User joined chat room: ${chatId}`);
+        socket.join(chatId)
+    });
 
     socket.on("fetchMessages", async (chatId) => {
 
@@ -37,6 +40,24 @@ io.on("connection", (socket) => {
         }
     });
 
+    socket.on("sendMessage", async (chatId, text, sendingUser) => {
+        try {
+            const updatedChat = await chatService.addMessageToChat(chatId, text, sendingUser);
+            if (updatedChat) {
+                console.log(" ")
+                console.log(" ")
+                console.log(updatedChat)
+                io.to(chatId).emit("newMessage", { success: true, messages: updatedChat.messages });
+            } else {
+                socket.emit("chatError", { success: false, error: "Failed to send message", status: 500 });
+            }
+        } catch (error) {
+            console.error("Error sending message:", error);
+            socket.emit("chatError", { success: false, error: "Internal Server Error", status: 500 });
+        }
+    });
+    
+
     socket.on("createChat", async (user1, user2) => {
         try {
             const newChat = await chatService.createChat(generateId(), user1, user2);
@@ -50,7 +71,19 @@ io.on("connection", (socket) => {
             socket.emit("chatError", { success: false, error: "Internal Server Error", status: 500 });
         }
     });
-})
+
+    socket.on("fetchUserChats", async (user) => {
+        try {
+            const chats = await chatService.getAllChats();
+            const userChats = chats.filter(chat => chat.users.includes(user));
+            socket.emit("userChats", { success: true, chats: userChats });
+        } catch (error) {
+            console.error("Error fetching user chats:", error);
+            socket.emit("userChats", { success: false, chats: [], error: "Internal Server Error", status: 500 });
+        }
+    }
+
+)})
 
 const serverPort = process.env.SERVER_PORT || 8000;
 httpServer.listen(serverPort);
