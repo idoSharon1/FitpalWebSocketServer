@@ -6,9 +6,16 @@ import { Server } from "socket.io";
 import connectDB from "./dal/db";
 import ChatService from "./bl/mongoService";
 import { generateId } from "./bl/utils/uuid";
+import fs from "fs";
 
 const app = express();
-const httpServer = createServer(app);
+
+const sslOptions = {
+    key: fs.readFileSync("./key.pem"), 
+    cert: fs.readFileSync("./cert.pem") 
+};
+
+const httpServer = createServer(sslOptions, app);
 connectDB();
 const io = new Server(httpServer, { 
     cors: {
