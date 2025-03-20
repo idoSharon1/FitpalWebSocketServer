@@ -94,7 +94,7 @@ io.on("connection", (socket) => {
 
 )})
 
-const serverPort = process.env.SERVER_PORT || 8000;
+const serverPort = process.env.SERVER_PORT || 4000;
 httpServer.listen(serverPort, "0.0.0.0", () => {
     console.log(`Socket server started on port -> ${serverPort}`);
 });
